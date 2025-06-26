@@ -1,0 +1,9 @@
+# 安装Pytorch GPU版本
+nvidia -smi 查看应安装的cuda版本
+查找安装命令https://pytorch.org/get-started/locally/
+版本Stable 2.7.1+cu126
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+torch
+torchvision 
+torchaudio
+
