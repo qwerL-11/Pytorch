@@ -13,9 +13,9 @@ class CNN(nn.Module):
         )
         # 全连接层 做分类
         self.classifier = nn.Sequential(
-            nn.Linear(32 * 56 * 56, 128), # 全连接层，输入通道数*图片大小，输出通道数 512
+            nn.Linear(32 * 56 * 56, 128), # 全连接层，输入通道数*图片大小，输出通道数
             nn.ReLU(), # 全连接层之后接上激活函数ReLU
-            nn.Linear(128, num_classes) # 全连接层，输入通道数，输出通道数 num_classeswe 为分类数量
+            nn.Linear(128, num_classes) # 全连接层，输入通道数，输出通道数 num_classes为分类数量
         )
     def forward(self, x):
         # 前向传播
