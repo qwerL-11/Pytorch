@@ -1,5 +1,5 @@
 import torch
-from model.cnn import CNN
+from model.cnn_template import CNN
 
 
 x = torch.randn(32, 3, 224, 224) # 模拟输入数据，batch_size为32，通道数为3，图片大小为224*224
