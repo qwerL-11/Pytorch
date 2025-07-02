@@ -1,2 +1,3 @@
 Pytorch/
-data/standard/
+data/0_standard/
+FaultClassificationData/

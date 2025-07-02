@@ -20,7 +20,7 @@ axes[0].plot(data[columns[0]])
 axes[0].set_title(columns[0])
 axes[0].set_xticks([0, 200, 400, 600, 800, 1000])
 axes[0].set_xlabel('Index')
-axes[0].set_yticks([])
+# axes[0].set_yticks([])
 
 # 隐藏第一行的其余两个子图
 axes[1].axis('off')
@@ -33,7 +33,7 @@ for i, col in enumerate(columns[1:]):
     axes[ax_idx].set_title(col)
     axes[ax_idx].set_xticks([0, 200, 400, 600, 800, 1000])
     axes[ax_idx].set_xlabel('Index')
-    axes[ax_idx].set_yticks([])
+    # axes[ax_idx].set_yticks([])
 
 # 隐藏多余的子图（如果有）
 for j in range(len(columns) + 2, len(axes)):
