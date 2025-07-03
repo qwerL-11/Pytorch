@@ -41,12 +41,6 @@ def stft_params():
     plt.savefig('data\\STFT\\stft_result.png', bbox_inches='tight', dpi=300)  # 保存图片
     plt.show()
 
-
-# 导入数据
-# train_set = load('data\\make_datasets\\train_set.joblib')
-# val_set = load('data\\make_datasets\\val_set.joblib')
-# test_set = load('data\\make_datasets\\test_set.joblib')
-
 if __name__ == '__main__':
 
     # 调用STFT参数选择函数

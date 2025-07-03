@@ -11,9 +11,9 @@ test_set = load('data\\make_datasets\\test_set.joblib')
 data_set = [train_set, val_set, test_set]
 
 # 数据集保存路径
-train_path = 'FaultClassificationData/train/'
-val_path = 'FaultClassificationData/val/'
-test_path = 'FaultClassificationData/test/'
+train_path = 'fault_classification_data/train/'
+val_path = 'fault_classification_data/val/'
+test_path = 'fault_classification_data/test/'
 path_list = [train_path, val_path, test_path]
 
 def makeTimeFrequencyImage(data, img_path, channel_names=None, img_size=(224, 224)):

@@ -30,19 +30,23 @@ def make_datasets(data_file_csv, label_list=None, split_rate=[0.7, 0.2, 0.1], ti
     train_set = samples[:n_train] # 训练集
     val_set = samples[n_train:n_train + n_val] # 验证集
     test_set = samples[n_train + n_val:] # 测试集
-    print(f'样本总数: {len(samples)}, 每个样本长度: {samples.shape[1]}\n'
-          f'训练集样本数: {n_train}, 验证集样本数: {n_val}, 测试集样本数: {len(test_set)}') # 打印样本信息
     return train_set, val_set, test_set
 
-# 划分训练集、验证集、测试集
-train_set, val_set, test_set = make_datasets(
-    'data\\read_data\\DE_12k_1797.csv',
-    split_rate=[0.7, 0.2, 0.1],
-    time_steps=512,
-    overlap_ratio=0.5
-)
+if __name__ == '__main__':
 
-# 保存数据
-dump(train_set, 'data\\make_datasets\\train_set.joblib')
-dump(val_set, 'data\\make_datasets\\val_set.joblib')
-dump(test_set, 'data\\make_datasets\\test_set.joblib')
+    # 划分训练集、验证集、测试集
+    train_set, val_set, test_set = make_datasets(
+        'data\\read_data\\DE_12k_1797.csv',
+        split_rate=[0.7, 0.2, 0.1],
+        time_steps=512,
+        overlap_ratio=0.5
+    )
+
+    print(f'训练集样本数: {len(train_set)}\n'
+          f'验证集样本数: {len(val_set)}\n'
+          f'测试集样本数: {len(test_set)}')
+
+    # 保存数据
+    dump(train_set, 'data\\make_datasets\\train_set.joblib')
+    dump(val_set, 'data\\make_datasets\\val_set.joblib')
+    dump(test_set, 'data\\make_datasets\\test_set.joblib')
