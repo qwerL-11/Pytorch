@@ -5,8 +5,9 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
+import logging # 日志模块
+from datetime import datetime # 时间模块
 from tqdm import tqdm # 进度条显示模块
-import logging
 
 # 获取项目根目录
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -54,7 +55,7 @@ def load_data(data_path):
 
     return train_loader, val_loader # 返回数据加载器
 
-def train_model(model, train_loader, criterion, optimizer, num_epochs, plot_dir):
+def train_model(model, train_loader, criterion, optimizer, num_epochs, best_model_path, plot_dir):
     """
     model: 你要训练的神经网络模型（如 VGG16Model 的实例）。
     train_loader: 训练集的数据加载器（DataLoader），用于批量读取训练数据。
@@ -93,11 +94,15 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, plot_dir)
             correct += predicted.eq(labels).sum().item() # 计算正确预测的数量
             total += labels.size(0) # 累加总样本数量
 
+            # 输出当前batch的损失和准确率
             logging.info(f"Epoch{epoch+1}-Batch{batch_idx}  Loss: {loss.item():.4f} | Acc: {correct / total:.4f}")
+            tqdm.write(f"Epoch{epoch+1}-Batch{batch_idx}  Loss: {loss.item():.4f} | Acc: {correct / total:.4f}")
 
         train_acc = correct / total # 计算训练集准确率
         train_loss = total_loss / total # 计算平均损失
+        # 输出一个epoch的训练结果
         logging.info(f"Epoch {epoch+1}/{num_epochs} | Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.4f}")
+        print(f"Epoch {epoch+1}/{num_epochs} | Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.4f}")
 
         # plot:保存训练loss和acc到文件
         train_loss_file.write(f"{train_loss}\n")
@@ -105,7 +110,7 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, plot_dir)
 
         # 验证模型
         val_loss, val_acc = validate_model(model, val_loader, criterion, return_loss=True)
-        
+
         # plot:保存验证loss和acc到文件
         val_loss_file.write(f"{val_loss}\n")
         val_acc_file.write(f"{val_acc}\n")
@@ -113,8 +118,9 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, plot_dir)
         # 保存最佳模型
         if val_acc > best_val_acc:
             best_val_acc = val_acc
-            torch.save(model.state_dict(), 'best_model\\best_vgg16_model.pth')
+            torch.save(model.state_dict(), best_model_path) # 保存模型权重
             logging.info(f'Best Model Updated, Accuracy: {best_val_acc:.4f}')
+            print(f'Best Model Updated, Accuracy: {best_val_acc:.4f}')
 
     # 关闭文件
     train_loss_file.close()
@@ -122,7 +128,7 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, plot_dir)
     val_loss_file.close()
     val_acc_file.close()
 
-def validate_model(model, val_loader, criterion, return_loss=False):
+def validate_model(model, val_loader, criterion, return_loss=True):
     # 验证
     model.eval() # 设置模型为评估模式
     val_dataset_loss = 0 # 初始化验证集损失
@@ -141,6 +147,8 @@ def validate_model(model, val_loader, criterion, return_loss=False):
     val_acc = val_correct / val_total # 计算验证集准确率
 
     logging.info(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
+    print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
+
     if return_loss:
         return val_loss, val_acc
     return val_acc
@@ -193,10 +201,14 @@ if __name__ == "__main__":
     #     print(f'Step {i}, Loss: {loss.item()}')
     
     # 配置日志
-    logging.basicConfig(filename=log_path, level=logging.INFO)
-    logging.info('训练开始')
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)  # 确保日志目录存在
+    # 清除所有已存在的 handler，确保 basicConfig 生效
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+    logging.basicConfig(filename=log_path, level=logging.INFO, encoding='utf-8')
+    logging.info(f'训练开始 | 时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
 
     # 开始训练
-    train_model(model, train_loader, criterion, optimizer, num_epochs, plot_dir)
+    train_model(model, train_loader, criterion, optimizer, num_epochs, best_model_path, plot_dir)
 
-    logging.info('训练结束')
+    logging.info(f'训练结束 | 时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')

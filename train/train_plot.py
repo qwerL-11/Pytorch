@@ -1,6 +1,5 @@
 import os
 import matplotlib.pyplot as plt
-# import numpy as np
 
 # 动态读取训练过程保存的数据（假设每行一个数字）
 def load_list_from_txt(path):

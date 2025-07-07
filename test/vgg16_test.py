@@ -5,6 +5,8 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import transforms, datasets
 import logging
+from datetime import datetime
+from tqdm import tqdm
 
 # 获取项目根目录
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -40,7 +42,7 @@ def load_test_data(data_path):  # 加载测试数据集
             return sample, target, path  # 返回图片、标签、路径
 
     test_data = MyImageFolder(os.path.join(data_path, 'test'), transform=transform)
-    test_loader = DataLoader(test_data, batch_size=64, shuffle=True)
+    test_loader = DataLoader(test_data, batch_size=64, shuffle=False)
     return test_loader
 
 def test_model(model, test_loader, criterion, device): # 测试模型
@@ -54,7 +56,8 @@ def test_model(model, test_loader, criterion, device): # 测试模型
                    'de_14_ball', 'de_14_outer', 'de_21_inner', 'de_21_ball', 'de_21_outer']
 
     with torch.no_grad():
-        for images, labels, paths in test_loader:
+        num = 1  # 用于记录图片编号
+        for images, labels, paths in tqdm(test_loader, desc='Testing', unit='batch'):
             images, labels = images.to(device), labels.to(device) # 将数据移动到设备上
             outputs = model(images) # 前向传播
             loss = criterion(outputs, labels) # 计算损失
@@ -66,22 +69,24 @@ def test_model(model, test_loader, criterion, device): # 测试模型
 
             # 打印每张图片的预测类别、真实类别、概率和图片名
             for i in range(images.size(0)):
-                pred_idx = predicted[i].item()
-                true_idx = labels[i].item()
-                prob_list = probs[i].cpu().numpy()
-                prob_str = ', '.join([f'{p:.3f}' for p in prob_list])
+                pred_idx = predicted[i].item() # 获取预测类别索引
+                true_idx = labels[i].item() # 获取真实类别索引
+                prob_list = probs[i].cpu().numpy() # 获取当前图片的概率列表
+                prob_str = ', '.join([f'{p:.3f}' for p in prob_list]) # 格式化概率字符串
                 img_name = os.path.basename(paths[i])  # 获取图片文件名
-                logging.info(f'图片: {img_name} | 预测: {class_names[pred_idx]} | 真实: {class_names[true_idx]} | 概率: [{prob_str}]')
+                logging.info(f'图片({num}): {img_name}[{true_idx}] | 预测: {class_names[pred_idx]}[{pred_idx}] | 概率: [{prob_str}]')
+                num += 1
 
     test_loss = test_loss_sum / test_total if test_total > 0 else 0 # 计算平均损失
     test_acc = test_correct / test_total if test_total > 0 else 0 # 计算准确率
     logging.info(f"Test Loss: {test_loss:.4f} | Test Acc: {test_acc:.4f}")
+    print(f"Test Loss: {test_loss:.4f} | Test Acc: {test_acc:.4f}") # 打印测试结果
 
 if __name__ == "__main__":
 
     data_path = 'fault_classification_data'  # 数据集路径
-    best_model_path = 'best_model\\best_vgg16_7.8.pth' # 最佳模型保存路径
-    log_path = 'log\\vgg16\\vgg16_test_7.8.txt' # 日志文件路径
+    best_model_path = 'best_model\\best_vgg16_7.7.pth' # 最佳模型保存路径
+    log_path = 'log\\vgg16\\7.7\\vgg16_test_7.7(1).txt' # 日志文件路径
 
     # 配置
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -93,10 +98,13 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss() # 定义损失函数
 
     # 配置日志
+    # 清除所有已存在的 handler，确保 basicConfig 生效
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
     logging.basicConfig(filename=log_path, level=logging.INFO, encoding='utf-8')
-    logging.info('测试开始')
+    logging.info(f'测试开始 | 时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
 
     # 测试开始
     test_model(model, test_loader, criterion, device)
 
-    logging.info('测试结束')
+    logging.info(f'测试结束 | 时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
