@@ -2,3 +2,5 @@ Pytorch/
 original_data/
 fault_classification_data/
 FaultClassificationData/
+label/
+best_model/
