@@ -2,11 +2,22 @@ import torch
 import torch.nn as nn
 
 class VGG16Model(nn.Module):
-    def __init__(self, num_classes, conv_arch, input_channels=3):
+
+    def __init__(self, num_classes, conv_arch=None, input_channels=3):
         super(VGG16Model, self).__init__() # 初始化父类
         self.num_classes = num_classes # 分类数量
-        self.conv_arch = conv_arch # 卷积层结构 [(卷积层数, 输出通道数), ...]
         self.input_channels = input_channels # 输入通道数，默认为3（RGB图像）
+        # 如果没有传入conv_arch，则使用VGG16默认结构
+        if conv_arch is None:
+            self.conv_arch = [
+                (2, 64),
+                (2, 128),
+                (3, 256),
+                (3, 512),
+                (3, 512)
+            ]
+        else:
+            self.conv_arch = conv_arch # 卷积层结构 [(卷积层数, 输出通道数), ...]
         self.features = self.make_layers() # 创建卷积层
         self.avgpool = nn.AdaptiveAvgPool2d((7, 7)) # 自适应平均池化，将输出大小调整为7x7
         self.classifier = nn.Sequential( # 全连接层结构
@@ -45,18 +56,8 @@ class VGG16Model(nn.Module):
 # 用法示例
 if __name__ == '__main__':
 
-    # VGG16 的卷积结构
-    vgg16_conv_arch = [
-        (2, 64),
-        (2, 128),
-        (3, 256),
-        (3, 512),
-        (3, 512)
-    ]
-
     # 示例：假设图片是3通道，分类数为10
-    model = VGG16Model(num_classes=10, conv_arch=vgg16_conv_arch, input_channels=3) 
+    model = VGG16Model(num_classes=10, input_channels=3) 
     x = torch.randn(2, 3, 224, 224)  # batch_size=2, 3通道, 224x224
     out = model(x)
     print(out.shape)  # 应为 [2, 10]
-    
