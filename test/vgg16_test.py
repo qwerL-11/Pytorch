@@ -99,6 +99,7 @@ if __name__ == "__main__":
 
     # 配置日志
     # 清除所有已存在的 handler，确保 basicConfig 生效
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)  # 确保日志目录存在
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
     logging.basicConfig(filename=log_path, level=logging.INFO, encoding='utf-8')

@@ -50,8 +50,8 @@ def load_data(data_path):
     train_data = MyImageFolder(os.path.join(data_path, 'train'), transform=transform) # 包装训练集
     val_data = MyImageFolder(os.path.join(data_path, 'val'), transform=transform) # 包装验证集
 
-    train_loader = DataLoader(train_data, batch_size=16, shuffle=True) # 创建训练集数据加载器
-    val_loader = DataLoader(val_data, batch_size=16, shuffle=False) # 创建验证集数据加载器
+    train_loader = DataLoader(train_data, batch_size=8, shuffle=True) # 创建训练集数据加载器
+    val_loader = DataLoader(val_data, batch_size=8, shuffle=False) # 创建验证集数据加载器
 
     return train_loader, val_loader # 返回数据加载器
 
@@ -66,15 +66,15 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, best_mode
     # 初始化最佳验证集准确率
     best_val_acc = 0
 
-    # plot:打开文件用于保存loss和acc（只打开一次，循环内写入，循环外关闭）
-    os.makedirs(plot_dir, exist_ok=True)
-    train_loss_file = open(os.path.join(plot_dir, 'train_loss.txt'), 'w')
-    train_acc_file = open(os.path.join(plot_dir, 'train_acc.txt'), 'w')
-    val_loss_file = open(os.path.join(plot_dir, 'val_loss.txt'), 'w')
-    val_acc_file = open(os.path.join(plot_dir, 'val_acc.txt'), 'w')
-
     # 训练循环
     for epoch in range(num_epochs):
+
+        # plot:打开文件用于保存loss和acc
+        os.makedirs(plot_dir, exist_ok=True)
+        train_loss_file = open(os.path.join(plot_dir, 'train_loss.txt'), 'a')
+        train_acc_file = open(os.path.join(plot_dir, 'train_acc.txt'), 'a')
+        val_loss_file = open(os.path.join(plot_dir, 'val_loss.txt'), 'a')
+        val_acc_file = open(os.path.join(plot_dir, 'val_acc.txt'), 'a')
 
         model.train() # 设置模型为训练模式
         total_loss = 0 # 初始化总损失
@@ -124,11 +124,11 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, best_mode
             logging.info(f"Best Model Updated, Accuracy: {best_val_acc:.4f}\n")
             print(f"Best Model Updated, Accuracy: {best_val_acc:.4f}\n")
 
-    # 关闭文件
-    train_loss_file.close()
-    train_acc_file.close()
-    val_loss_file.close()
-    val_acc_file.close()
+        # 关闭文件
+        train_loss_file.close()
+        train_acc_file.close()
+        val_loss_file.close()
+        val_acc_file.close()
 
 def validate_model(model, val_loader, criterion, return_loss=True):
     # 验证
@@ -159,17 +159,27 @@ def validate_model(model, val_loader, criterion, return_loss=True):
 if __name__ == "__main__":
 
     data_path = 'fault_classification_data'  # 数据集路径
-    best_model_path = 'best_model\\best_vgg16_7.8.pth' # 最佳模型保存路径
-    log_path = 'log\\vgg16\\7.8\\vgg16_train_7.8.txt' # 日志文件路径
-    plot_dir = 'log\\vgg16\\7.8\\plot' # 曲线数据保存路径
+    best_model_path = 'best_model\\best_vgg16_7.9.pth' # 最佳模型保存路径
+    log_path = 'log\\vgg16\\7.9\\vgg16_train_7.9.txt' # 日志文件路径
+    plot_dir = 'log\\vgg16\\7.9\\plot' # 曲线数据保存路径
+
+    # 配置日志及模型保存路径
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)  # 确保日志目录存在
+    os.makedirs(os.path.dirname(best_model_path), exist_ok=True)  # 确保模型保存目录存在
+    # 清除所有已存在的 handler，确保 basicConfig 生效
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+    logging.basicConfig(filename=log_path, level=logging.INFO, encoding='utf-8')
+    logging.info(f'训练开始 | 时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+
+    # 使用设备
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    logging.info(f"Using device: {device}")  # 记录使用的设备
+    print(f'Using device: {device}')  # 打印使用的设备
 
     # 配置
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f'Using device: {device}')  # 打印使用的设备
     num_classes = 10 # 类别数量
-
     model = VGG16Model(num_classes=num_classes).to(device) # 实例化模型并移动到设备
-
     # 如果存在预训练模型，则加载权重
     if os.path.exists(best_model_path):
         model.load_state_dict(torch.load(best_model_path, map_location=device))
@@ -181,7 +191,13 @@ if __name__ == "__main__":
     num_epochs = 12  # 训练轮数
 
     # 打印类别映射
-    # logging.info(f"类别映射: {train_loader.dataset.class_to_idx}")
+    logging.info(f"类别映射: {train_loader.dataset.class_to_idx}\n")
+
+    # 训练
+    train_model(model, train_loader, criterion, optimizer, num_epochs, best_model_path, plot_dir)
+
+    # 训练结束
+    logging.info(f'训练结束 | 时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
 
     # 查看第一个batch的图片及其标签和路径
     # images, labels, paths = next(iter(train_loader))
@@ -200,17 +216,3 @@ if __name__ == "__main__":
     #     loss.backward() # 反向传播
     #     optimizer.step() # 更新参数
     #     print(f'Step {i}, Loss: {loss.item()}')
-    
-    # 配置日志
-    os.makedirs(os.path.dirname(log_path), exist_ok=True)  # 确保日志目录存在
-    # 清除所有已存在的 handler，确保 basicConfig 生效
-    for handler in logging.root.handlers[:]:
-        logging.root.removeHandler(handler)
-    logging.basicConfig(filename=log_path, level=logging.INFO, encoding='utf-8')
-    logging.info(f'训练开始 | 时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
-    logging.info(f"Using device: {device}\n")  # 记录使用的设备
-
-    # 开始训练
-    train_model(model, train_loader, criterion, optimizer, num_epochs, best_model_path, plot_dir)
-
-    logging.info(f'训练结束 | 时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
