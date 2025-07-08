@@ -42,7 +42,7 @@ def load_test_data(data_path):  # 加载测试数据集
             return sample, target, path  # 返回图片、标签、路径
 
     test_data = MyImageFolder(os.path.join(data_path, 'test'), transform=transform)
-    test_loader = DataLoader(test_data, batch_size=64, shuffle=False)
+    test_loader = DataLoader(test_data, batch_size=16, shuffle=False)
     return test_loader
 
 def test_model(model, test_loader, criterion, device): # 测试模型
@@ -85,8 +85,8 @@ def test_model(model, test_loader, criterion, device): # 测试模型
 if __name__ == "__main__":
 
     data_path = 'fault_classification_data'  # 数据集路径
-    best_model_path = 'best_model\\best_vgg16_7.7.pth' # 最佳模型保存路径
-    log_path = 'log\\vgg16\\7.7\\vgg16_test_7.7(1).txt' # 日志文件路径
+    best_model_path = 'best_model\\best_vgg16_7.8.pth' # 最佳模型保存路径
+    log_path = 'log\\vgg16\\7.8\\vgg16_test_7.8.txt' # 日志文件路径
 
     # 配置
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

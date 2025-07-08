@@ -50,8 +50,8 @@ def load_data(data_path):
     train_data = MyImageFolder(os.path.join(data_path, 'train'), transform=transform) # 包装训练集
     val_data = MyImageFolder(os.path.join(data_path, 'val'), transform=transform) # 包装验证集
 
-    train_loader = DataLoader(train_data, batch_size=64, shuffle=True) # 创建训练集数据加载器
-    val_loader = DataLoader(val_data, batch_size=64, shuffle=False) # 创建验证集数据加载器
+    train_loader = DataLoader(train_data, batch_size=16, shuffle=True) # 创建训练集数据加载器
+    val_loader = DataLoader(val_data, batch_size=16, shuffle=False) # 创建验证集数据加载器
 
     return train_loader, val_loader # 返回数据加载器
 
@@ -66,15 +66,15 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, best_mode
     # 初始化最佳验证集准确率
     best_val_acc = 0
 
+    # plot:打开文件用于保存loss和acc（只打开一次，循环内写入，循环外关闭）
+    os.makedirs(plot_dir, exist_ok=True)
+    train_loss_file = open(os.path.join(plot_dir, 'train_loss.txt'), 'w')
+    train_acc_file = open(os.path.join(plot_dir, 'train_acc.txt'), 'w')
+    val_loss_file = open(os.path.join(plot_dir, 'val_loss.txt'), 'w')
+    val_acc_file = open(os.path.join(plot_dir, 'val_acc.txt'), 'w')
+
     # 训练循环
     for epoch in range(num_epochs):
-
-        # plot:打开文件用于保存loss和acc
-        os.makedirs(plot_dir, exist_ok=True)
-        train_loss_file = open(os.path.join(plot_dir, 'train_loss.txt'), 'w')
-        train_acc_file = open(os.path.join(plot_dir, 'train_acc.txt'), 'w')
-        val_loss_file = open(os.path.join(plot_dir, 'val_loss.txt'), 'w')
-        val_acc_file = open(os.path.join(plot_dir, 'val_acc.txt'), 'w')
 
         model.train() # 设置模型为训练模式
         total_loss = 0 # 初始化总损失
@@ -124,11 +124,11 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, best_mode
             logging.info(f"Best Model Updated, Accuracy: {best_val_acc:.4f}\n")
             print(f"Best Model Updated, Accuracy: {best_val_acc:.4f}\n")
 
-         # 关闭文件
-        train_loss_file.close()
-        train_acc_file.close()
-        val_loss_file.close()
-        val_acc_file.close()
+    # 关闭文件
+    train_loss_file.close()
+    train_acc_file.close()
+    val_loss_file.close()
+    val_acc_file.close()
 
 def validate_model(model, val_loader, criterion, return_loss=True):
     # 验证
@@ -178,7 +178,7 @@ if __name__ == "__main__":
     train_loader, val_loader = load_data(data_path) # 加载数据
     criterion = nn.CrossEntropyLoss() # 定义损失函数
     optimizer = optim.Adam(model.parameters(), lr=1e-4) # 定义优化器
-    num_epochs = 20  # 训练轮数
+    num_epochs = 12  # 训练轮数
 
     # 打印类别映射
     # logging.info(f"类别映射: {train_loader.dataset.class_to_idx}")
