@@ -63,17 +63,19 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, best_mode
     optimizer: 优化器（如 optim.Adam），用于更新模型参数以最小化损失。
     num_epochs: 训练轮数，即整个训练集将被模型完整学习多少次。
     """
-    # 训练与验证
-    best_val_acc = 0 # 初始化最佳验证集准确率
+    # 初始化最佳验证集准确率
+    best_val_acc = 0
 
-    # plot:打开文件用于保存loss和acc
-    os.makedirs(plot_dir, exist_ok=True)
-    train_loss_file = open(os.path.join(plot_dir, 'train_loss.txt'), 'w')
-    train_acc_file = open(os.path.join(plot_dir, 'train_acc.txt'), 'w')
-    val_loss_file = open(os.path.join(plot_dir, 'val_loss.txt'), 'w')
-    val_acc_file = open(os.path.join(plot_dir, 'val_acc.txt'), 'w')
-
+    # 训练循环
     for epoch in range(num_epochs):
+
+        # plot:打开文件用于保存loss和acc
+        os.makedirs(plot_dir, exist_ok=True)
+        train_loss_file = open(os.path.join(plot_dir, 'train_loss.txt'), 'w')
+        train_acc_file = open(os.path.join(plot_dir, 'train_acc.txt'), 'w')
+        val_loss_file = open(os.path.join(plot_dir, 'val_loss.txt'), 'w')
+        val_acc_file = open(os.path.join(plot_dir, 'val_acc.txt'), 'w')
+
         model.train() # 设置模型为训练模式
         total_loss = 0 # 初始化总损失
         correct = 0 # 初始化正确预测计数
@@ -119,14 +121,14 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, best_mode
         if val_acc > best_val_acc:
             best_val_acc = val_acc
             torch.save(model.state_dict(), best_model_path) # 保存模型权重
-            logging.info(f'Best Model Updated, Accuracy: {best_val_acc:.4f}')
-            print(f'Best Model Updated, Accuracy: {best_val_acc:.4f}')
+            logging.info(f"Best Model Updated, Accuracy: {best_val_acc:.4f}\n")
+            print(f"Best Model Updated, Accuracy: {best_val_acc:.4f}\n")
 
-    # 关闭文件
-    train_loss_file.close()
-    train_acc_file.close()
-    val_loss_file.close()
-    val_acc_file.close()
+         # 关闭文件
+        train_loss_file.close()
+        train_acc_file.close()
+        val_loss_file.close()
+        val_acc_file.close()
 
 def validate_model(model, val_loader, criterion, return_loss=True):
     # 验证
@@ -146,8 +148,8 @@ def validate_model(model, val_loader, criterion, return_loss=True):
     val_loss = val_dataset_loss / val_total if val_total > 0 else 0 # 计算验证集平均损失
     val_acc = val_correct / val_total # 计算验证集准确率
 
-    logging.info(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
-    print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
+    logging.info(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}\n")
+    print(f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}\n")
 
     if return_loss:
         return val_loss, val_acc
@@ -176,17 +178,16 @@ if __name__ == "__main__":
     train_loader, val_loader = load_data(data_path) # 加载数据
     criterion = nn.CrossEntropyLoss() # 定义损失函数
     optimizer = optim.Adam(model.parameters(), lr=1e-4) # 定义优化器
-    num_epochs = 10  # 训练轮数
+    num_epochs = 20  # 训练轮数
 
     # 打印类别映射
-    logging.info(f"类别映射: {train_loader.dataset.class_to_idx}")
+    # logging.info(f"类别映射: {train_loader.dataset.class_to_idx}")
 
     # 查看第一个batch的图片及其标签和路径
     # images, labels, paths = next(iter(train_loader))
     # for path, label in zip(paths, labels):
     #     print(f"{os.path.basename(path)}\t标签: {label.item()}")
     
-
     # 过拟合小样本测试
     # model.train()
     # data, target, paths = next(iter(train_loader))
@@ -207,6 +208,7 @@ if __name__ == "__main__":
         logging.root.removeHandler(handler)
     logging.basicConfig(filename=log_path, level=logging.INFO, encoding='utf-8')
     logging.info(f'训练开始 | 时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+    logging.info(f"Using device: {device}\n")  # 记录使用的设备
 
     # 开始训练
     train_model(model, train_loader, criterion, optimizer, num_epochs, best_model_path, plot_dir)
