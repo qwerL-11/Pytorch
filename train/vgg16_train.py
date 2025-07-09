@@ -96,9 +96,10 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, best_mode
             correct += predicted.eq(labels).sum().item() # 计算正确预测的数量
             total += labels.size(0) # 累加总样本数量
 
-            # 输出当前batch的损失和准确率
-            logging.info(f"Epoch{epoch+1}-Batch{batch_idx}  Loss: {loss.item():.4f} | Acc: {correct / total:.4f}")
-            tqdm.write(f"Epoch{epoch+1}-Batch{batch_idx}  Loss: {loss.item():.4f} | Acc: {correct / total:.4f}")
+            # 输出当前batch的损失和准确率（只显示当前batch，不累计）
+            batch_acc = predicted.eq(labels).sum().item() / labels.size(0)  # 当前batch的准确率
+            logging.info(f"Epoch{epoch+1}-Batch{batch_idx}  Batch-Loss: {loss.item():.4f} | Batch-Acc: {batch_acc:.4f} | Epoch-Loss: {total_loss/total:.4f} | Epoch-Acc: {correct/total:.4f}")
+            tqdm.write(f"Epoch{epoch+1}-Batch{batch_idx}  Batch-Loss: {loss.item():.4f} | Batch-Acc: {batch_acc:.4f} | Epoch-Loss: {total_loss/total:.4f} | Epoch-Acc: {correct/total:.4f}")
 
         train_acc = correct / total # 计算训练集准确率
         train_loss = total_loss / total # 计算平均损失
@@ -197,7 +198,8 @@ if __name__ == "__main__":
     train_model(model, train_loader, criterion, optimizer, num_epochs, best_model_path, plot_dir)
 
     # 训练结束
-    logging.info(f'训练结束 | 时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+    print(f"训练结束 | 时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logging.info(f"训练结束 | 时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     # 查看第一个batch的图片及其标签和路径
     # images, labels, paths = next(iter(train_loader))
