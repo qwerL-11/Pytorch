@@ -55,6 +55,38 @@ def load_data(data_path):
 
     return train_loader, val_loader # 返回数据加载器
 
+class EarlyStopping:
+    def __init__(self, patience=5, verbose=1):
+        self.patience = patience
+        self.verbose = verbose
+        self.counter = 0
+        self.best_acc = None
+        self.early_stop = False
+
+    def __call__(self, val_acc):
+        if self.best_acc is None or val_acc > self.best_acc:
+            self.best_acc = val_acc
+            self.counter = 0
+            if self.verbose:
+                logging.info(f"EarlyStopping: 验证集准确率新高 {val_acc:.6f}\n")
+                print(f"EarlyStopping: 验证集准确率新高 {val_acc:.6f}\n")
+        elif self.best_acc < 0.90:
+            # 如果验证集准确率低于0.9，重置计数器
+            self.counter = 0
+            if self.verbose:
+                logging.info("EarlyStopping: 验证集准确率低于阈值，重置计数器\n")
+                print(f"EarlyStopping: 验证集准确率低于阈值，重置计数器\n")
+        else:
+            self.counter += 1
+            if self.verbose:
+                logging.info(f"EarlyStopping: 验证集准确率未提升 {self.counter}/{self.patience}\n")
+                print(f"EarlyStopping: 验证集准确率未提升 {self.counter}/{self.patience}\n")
+            if self.counter >= self.patience:
+                self.early_stop = True
+                if self.verbose:
+                    logging.info("EarlyStopping: 触发早停，停止训练\n")
+                    print("EarlyStopping: 触发早停，停止训练\n")
+
 def train_model(model, train_loader, criterion, optimizer, num_epochs, best_model_path, plot_dir):
     """
     model: 你要训练的神经网络模型（如 VGG16Model 的实例）。
@@ -65,6 +97,9 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, best_mode
     """
     # 初始化最佳验证集准确率
     best_val_acc = 0
+
+    # 早停回调
+    early_stopping = EarlyStopping(patience=5, verbose=1)
 
     # 训练循环
     for epoch in range(num_epochs):
@@ -122,14 +157,20 @@ def train_model(model, train_loader, criterion, optimizer, num_epochs, best_mode
         if val_acc > best_val_acc:
             best_val_acc = val_acc
             torch.save(model.state_dict(), best_model_path) # 保存模型权重
-            logging.info(f"Best Model Updated, Accuracy: {best_val_acc:.4f}\n")
-            print(f"Best Model Updated, Accuracy: {best_val_acc:.4f}\n")
+            logging.info(f"Best Model Updated, Accuracy: {best_val_acc:.4f}")
+            print(f"Best Model Updated, Accuracy: {best_val_acc:.4f}")
 
         # 关闭文件
         train_loss_file.close()
         train_acc_file.close()
         val_loss_file.close()
         val_acc_file.close()
+
+        # 每个epoch结束时检查早停条件
+        early_stopping(val_acc=best_val_acc)  # 检查早停条件
+        if early_stopping.early_stop:
+            print("Early stopping triggered, stopping training.")
+            break
 
 def validate_model(model, val_loader, criterion, return_loss=True):
     # 验证
@@ -156,7 +197,6 @@ def validate_model(model, val_loader, criterion, return_loss=True):
         return val_loss, val_acc
     return val_acc
     
-
 if __name__ == "__main__":
 
     data_path = 'fault_classification_data'  # 数据集路径
@@ -189,7 +229,7 @@ if __name__ == "__main__":
     train_loader, val_loader = load_data(data_path) # 加载数据
     criterion = nn.CrossEntropyLoss() # 定义损失函数
     optimizer = optim.Adam(model.parameters(), lr=1e-4) # 定义优化器
-    num_epochs = 12  # 训练轮数
+    num_epochs = 30  # 训练轮数
 
     # 打印类别映射
     logging.info(f"类别映射: {train_loader.dataset.class_to_idx}\n")
