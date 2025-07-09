@@ -137,7 +137,7 @@ def validate_model(model, val_loader, criterion, return_loss=True):
     val_correct = 0 # 初始化验证集正确预测计数
     val_total = 0 # 验证集总样本数
     with torch.no_grad(): # 在验证时不需要计算梯度
-        for images, labels, _ in val_loader: # 遍历验证集
+        for images, labels, _ in tqdm(val_loader, desc='Validating', unit='batch'): # 遍历验证集
             images, labels = images.to(device), labels.to(device) # 将数据移动到设备
             outputs = model(images) # 前向传播，获取模型输出
             loss = criterion(outputs, labels) # 计算损失
